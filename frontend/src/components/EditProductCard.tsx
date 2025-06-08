@@ -188,15 +188,31 @@ const EditProductCard = ({
         setFileUploading(true);
       }
 
+      // Trim all string values
+      const trimmedData = {
+        ...data,
+        imageUrl: data.imageUrl?.trim() || "",
+        domainName: data.domainName.trim().replace(/^www\./, ""),
+        url: data.url.trim(),
+        description: data.description.trim(),
+        // Trim nested array objects
+        reviewers: data.reviewers.map((reviewer) => ({
+          name: reviewer.name.trim(),
+          url: reviewer.url.trim(),
+        })),
+        keywords: data.keywords.map((keyword) => keyword.trim()),
+        categories: data.categories.map((category) => category.trim()),
+      };
+
       // Add form fields to the formData
-      formData.append("url", data.url);
-      formData.append("domainName", data.domainName.replace(/^www\./, ""));
-      formData.append("description", data.description);
-      formData.append("rating", data.rating.toString());
-      formData.append("freeTrial", data.freeTrial.toString());
-      formData.append("reviewers", JSON.stringify(data.reviewers));
-      formData.append("keywords", JSON.stringify(data.keywords));
-      formData.append("categories", JSON.stringify(data.categories));
+      formData.append("url", trimmedData.url);
+      formData.append("domainName", trimmedData.domainName);
+      formData.append("description", trimmedData.description);
+      formData.append("rating", trimmedData.rating.toString());
+      formData.append("freeTrial", trimmedData.freeTrial.toString());
+      formData.append("reviewers", JSON.stringify(trimmedData.reviewers));
+      formData.append("keywords", JSON.stringify(trimmedData.keywords));
+      formData.append("categories", JSON.stringify(trimmedData.categories));
 
       // If we have a selected file, add it to the form data
       if (selectedFile) {
@@ -206,7 +222,7 @@ const EditProductCard = ({
         formData.append("imageURL", "");
       } else {
         // Otherwise, send the current image URL
-        formData.append("imageURL", data.imageUrl);
+        formData.append("imageURL", trimmedData.imageUrl);
       }
 
       // Call the API to update the product
@@ -705,25 +721,50 @@ const EditProductCard = ({
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                form="edit-product-form"
-                disabled={
-                  (!hasChanges && !form.formState.isDirty) ||
-                  submitStatus === "loading" ||
-                  submitStatus === "success"
-                }
-                className="min-w-[140px]"
-                variant={submitStatus === "error" ? "destructive" : "default"}
-              >
-                {submitStatus === "loading"
-                  ? "Saving..."
-                  : submitStatus === "success"
-                  ? "Tool Updated!"
-                  : submitStatus === "error"
-                  ? "Failed"
-                  : "Save Changes"}
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    disabled={
+                      (!hasChanges && !form.formState.isDirty) ||
+                      submitStatus === "loading" ||
+                      submitStatus === "success"
+                    }
+                  >
+                    Update Tool
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Update Tool</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to update this tool?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      form="edit-product-form"
+                      disabled={
+                        (!hasChanges && !form.formState.isDirty) ||
+                        submitStatus === "loading" ||
+                        submitStatus === "success"
+                      }
+                      className="min-w-[140px]"
+                      variant={
+                        submitStatus === "error" ? "destructive" : "default"
+                      }
+                    >
+                      {submitStatus === "loading"
+                        ? "Saving..."
+                        : submitStatus === "success"
+                        ? "Tool Updated!"
+                        : submitStatus === "error"
+                        ? "Failed"
+                        : "Save Changes"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </DialogFooter>
           </form>
         </Form>
